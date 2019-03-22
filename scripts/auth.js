@@ -4,10 +4,10 @@
 auth.onAuthStateChanged(user => {
     if(user) {
         // getting the documents
-        db.collection('guides').get().then( snapshot => { 
+        db.collection('guides').onSnapshot( snapshot => { 
             setupGuides(snapshot.docs)
             setupUI(user)
-        })
+        }, error => { console.error(error)})
     } else {
         // getting the documents
         setupGuides([])
@@ -35,9 +35,9 @@ signUp.addEventListener('submit', e => {
         const modal = document.querySelector('#modal-signup')
         M.Modal.getInstance(modal).close()
         signUp.reset()
-        M.toast({html: 'User registration successful', classes: 'success'})
-    }).catch(() => {
-        M.toast({html: 'Something went wrong', classes: 'error'})
+        M.toast({html: 'User registration was successfull', classes: 'success'})
+    }).catch(e => {
+        M.toast({html: e.message, classes: 'error'})
     })
 })
 
@@ -46,9 +46,9 @@ const logout = document.querySelector('#logout')
 logout.addEventListener('click', (e) => {
     e.preventDefault();
     auth.signOut().then(() => {
-        M.toast({html: 'User logged out successful', classes: 'success'})
-    }).catch(() => {
-        M.toast({html: 'Something went wrong', classes: 'error'})
+        M.toast({html: 'User logged out successfully', classes: 'success'})
+    }).catch(e => {
+        M.toast({html: e.message, classes: 'error'})
     })
 })
 
@@ -57,6 +57,7 @@ const loginForm = document.querySelector('#login-form')
 
 loginForm.addEventListener('submit', e => {
     e.preventDefault();
+    const modal = document.querySelector('#modal-login')
 
     // get user info
     const email = loginForm['login-email'].value
@@ -66,11 +67,37 @@ loginForm.addEventListener('submit', e => {
     auth.signInWithEmailAndPassword(email, password).then( cred => {
         
         // close the modal form and reset the form
-        const modal = document.querySelector('#modal-login')
+        
         M.Modal.getInstance(modal).close()
         loginForm.reset()
         M.toast({html: 'User logged in successfully', classes: 'success'})
-    }).catch(() => {
-        M.toast({html: 'Something went wrong', classes: 'error'})
+    }).catch(e => {
+        M.Modal.getInstance(modal).close()
+        loginForm.reset()
+        M.toast({html: e.message, classes: 'error'})
+    })
+})
+
+
+// adding a guide
+const createForm = document.querySelector('#create-form')
+
+createForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const modal = document.querySelector('#modal-create')
+
+    db.collection('guides').add({
+        title: createForm['title'].value,
+        content: createForm['content'].value
+    }).then( () => {
+
+        // close the modal form and reset the form
+        M.Modal.getInstance(modal).close()
+        createForm.reset()
+        M.toast({html: 'Guide created', classes: 'success'})
+    }).catch(e => {
+        M.Modal.getInstance(modal).close()
+        createForm.reset()
+        M.toast({html: e.message, classes: 'error'})
     })
 })
