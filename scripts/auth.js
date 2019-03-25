@@ -1,13 +1,30 @@
+// add admin cloud function
 
+const adminForm = document.querySelector('.admin-actions')
+
+adminForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const adminEmail = adminForm['admin-email'].value
+    const addAdminRole = functions.httpsCallable('addAdminRole');
+
+    addAdminRole({email: adminEmail}).then(result => {
+        M.toast({ html: result.data.message, classes: 'success'})
+        adminForm.reset()
+    })
+})
 
 // tracking the auth status
 auth.onAuthStateChanged(user => {
     if(user) {
+        user.getIdTokenResult().then( idTokenResult => {
+            user.admin = idTokenResult.claims.admin;
+            setupUI(user)
+        })
+        
         // getting the documents
         db.collection('guides').onSnapshot( snapshot => { 
             setupGuides(snapshot.docs)
-            setupUI(user)
-        }, error => { console.error(error)})
+        }, error => { console.error(error.message)})
     } else {
         // getting the documents
         setupGuides([])
@@ -41,10 +58,11 @@ signUp.addEventListener('submit', e => {
         const modal = document.querySelector('#modal-signup')
         M.Modal.getInstance(modal).close()
         signUp.reset()
+        signUp.querySelector('.error').innerHTML = ''
         M.toast({html: 'User registration was successfull', classes: 'success'})
     })
     .catch(e => {
-        M.toast({html: e.message, classes: 'error'})
+        signUp.querySelector('.errors').innerHTML = e.message
     })
 })
 
@@ -77,11 +95,10 @@ loginForm.addEventListener('submit', e => {
         
         M.Modal.getInstance(modal).close()
         loginForm.reset()
+        loginForm.querySelector('.errors').innerHTML = ''
         M.toast({html: 'User logged in successfully', classes: 'success'})
     }).catch(e => {
-        M.Modal.getInstance(modal).close()
-        loginForm.reset()
-        M.toast({html: e.message, classes: 'error'})
+        loginForm.querySelector('.errors').innerHTML = e.message
     })
 })
 
