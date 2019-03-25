@@ -27,16 +27,23 @@ signUp.addEventListener('submit', e => {
     // get user info
     const email = signUp['signup-email'].value
     const password = signUp['signup-password'].value
+    const bio = signUp['signup-bio'].value
 
     // sign up the user
     auth.createUserWithEmailAndPassword(email, password).then( cred => {
 
+        // creating a user collection
+        return db.collection('users').doc(cred.user.uid).set({
+            bio
+        });
+    }).then(() => {
         // close the modal form and reset the form
         const modal = document.querySelector('#modal-signup')
         M.Modal.getInstance(modal).close()
         signUp.reset()
         M.toast({html: 'User registration was successfull', classes: 'success'})
-    }).catch(e => {
+    })
+    .catch(e => {
         M.toast({html: e.message, classes: 'error'})
     })
 })
